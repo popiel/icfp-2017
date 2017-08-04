@@ -4,8 +4,9 @@ import spray.json._
 
 case class Hail(me: String)
 case class WellMet(you: String)
-case class Setup(punter: Int, punters: Int, map: Graph)
-case class Ready(ready: Int, state: Option[JsValue])
+case class Setup(punter: Int, punters: Int, map: Graph, settings: Option[Settings])
+case class Settings(futures: Boolean)
+case class Ready(ready: Int, state: Option[JsValue], futures: Option[Vector[River]])
 case class Graph(sites: Vector[Site], rivers: Vector[River], mines: Vector[Int])
 case class Site(id: Int)
 case class River(source: Int, target: Int) { def canonical = if (source <= target) this else River(target, source) }
@@ -30,8 +31,9 @@ object PunterJsonProtocol {
   implicit val RiverFormat = jsonFormat2(River.apply)
   implicit val SiteFormat = jsonFormat1(Site.apply)
   implicit val GraphFormat = jsonFormat3(Graph.apply)
-  implicit val ReadyFormat = jsonFormat2(Ready.apply)
-  implicit val SetupFormat = jsonFormat3(Setup.apply)
+  implicit val ReadyFormat = jsonFormat3(Ready.apply)
+  implicit val SettingsFormat = jsonFormat1(Settings.apply)
+  implicit val SetupFormat = jsonFormat4(Setup.apply)
   implicit val WellMetFormat = jsonFormat1(WellMet.apply)
   implicit val HailFormat = jsonFormat1(Hail.apply)
 }
