@@ -20,6 +20,7 @@ object Punter {
   }
 
   def online(strategy: Strategy, host: String, port: Int) {
+    System.err.println(s"Connecting to $host:$port")
     val socket = new Socket(host, port)
     val punter = new Punter(strategy, new DataInputStream(socket.getInputStream), socket.getOutputStream)
     punter.handshake()
@@ -88,7 +89,7 @@ class Punter(strategy: Strategy, in: DataInput, out: OutputStream) {
         if (myId >= 0) {
           val myScore = scores.find(_.punter == myId).get.score
           val myPoints = scores.length - scores.filter(_.score > myScore).length
-          System.err.println("I got " + myPoints + " points!")
+          System.err.println(s"I got $myPoints points with a score of $myScore!")
         }
         false
       case Left(turn) =>

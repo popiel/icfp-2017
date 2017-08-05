@@ -10,7 +10,7 @@ case class Ready(ready: Int, state: Option[JsValue], futures: Option[Vector[Rive
 case class Graph(sites: Vector[Site], rivers: Vector[River], mines: Vector[Long])
 case class Site(id: Long)
 case class River(source: Long, target: Long) { def canonical = if (source <= target) this else River(target, source) }
-case class Turn(move: Option[Moves], stop: Option[Stop], state: Option[JsValue])
+case class Turn(move: Option[Moves], stop: Option[Stop], state: Option[JsValue]) { require(move != None || stop != None) }
 case class Moves(moves: Vector[Move])
 case class Move(claim: Option[Claim], pass: Option[Pass], state: Option[JsValue])
 case class Claim(punter: Int, source: Long, target: Long)
