@@ -8,3 +8,4 @@ token
 *.out
 key
 /log
+/project/build.properties

@@ -7,16 +7,16 @@ case class WellMet(you: String)
 case class Setup(punter: Int, punters: Int, map: Graph, settings: Option[Settings])
 case class Settings(futures: Boolean)
 case class Ready(ready: Int, state: Option[JsValue], futures: Option[Vector[River]])
-case class Graph(sites: Vector[Site], rivers: Vector[River], mines: Vector[Int])
-case class Site(id: Int)
-case class River(source: Int, target: Int) { def canonical = if (source <= target) this else River(target, source) }
+case class Graph(sites: Vector[Site], rivers: Vector[River], mines: Vector[Long])
+case class Site(id: Long)
+case class River(source: Long, target: Long) { def canonical = if (source <= target) this else River(target, source) }
 case class Turn(move: Option[Moves], stop: Option[Stop], state: Option[JsValue])
 case class Moves(moves: Vector[Move])
 case class Move(claim: Option[Claim], pass: Option[Pass], state: Option[JsValue])
-case class Claim(punter: Int, source: Int, target: Int)
+case class Claim(punter: Int, source: Long, target: Long)
 case class Pass(punter: Int)
 case class Stop(moves: Vector[Move], scores: Vector[Score])
-case class Score(punter: Int, score: Int)
+case class Score(punter: Int, score: Long)
 
 object PunterJsonProtocol {
   import DefaultJsonProtocol._
