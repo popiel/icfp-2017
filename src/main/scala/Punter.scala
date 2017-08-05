@@ -52,8 +52,15 @@ class Punter(strategy: Strategy, in: DataInputStream, out: OutputStream) {
 
   var readBuf = new Array[Byte](1024 * 1024)
   @tailrec final def recvLen(acc: Int = 0): Int = {
-    val c = in.read()
-    if (c == ':') acc
+    val c = try {
+      in.read()
+    } catch {
+      case e: java.io.IOException if e.getMessage contains "Resource temporarily unavailable" => -2
+    }
+    if (c == -2) {
+      Thread.sleep(10)
+      recvLen(acc)
+    } else if (c == ':') acc
     else if (c >= '0' && c <= '9') recvLen(acc * 10 + c - '0')
     else throw new IllegalArgumentException("Invalid character in message length: " + c)
   }
