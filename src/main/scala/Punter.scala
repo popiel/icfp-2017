@@ -40,6 +40,10 @@ class Punter(strategy: Strategy, in: DataInput, out: OutputStream) {
   def send[T:JsonWriter](msg: T) {
     val bytes = msg.toJson.compactPrint.getBytes
     val lengthMark = (bytes.length.toString + ":").getBytes
+    System.err.print("Sending: ")
+    System.err.write(lengthMark)
+    System.err.write(bytes)
+    System.err.println()
     out.write(lengthMark)
     out.write(bytes)
     out.flush()
@@ -53,7 +57,9 @@ class Punter(strategy: Strategy, in: DataInput, out: OutputStream) {
     else throw new IllegalArgumentException("Invalid character in message length: " + c)
   }
   def recv: JsValue = {
+    System.err.println("Reading:")
     val len = recvLen()
+    System.err.println("  len: " + len)
     if (readBuf.length < len) readBuf = new Array[Byte](len)
     in.readFully(readBuf, 0, len)
     JsonParser(new ParserInput.ByteArrayBasedParserInput(readBuf) { override def length = len })
