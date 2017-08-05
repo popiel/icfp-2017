@@ -13,32 +13,47 @@ class Sleepy extends Strategy {
   }
 }
 
-case class GameState(id: Int, sites: Vector[Long], mines: Vector[Int], rivers: Vector[(Int,Int,Int)]) {
+case class GameState(id: Int, punters: Int, remaining: Int, sites: Vector[Long], rMap: Vector[Set[Int]], mines: Vector[Int], rivers: Vector[(Int,Int,Int)]) {
   def + (claim: Claim) = {
     val from = sites.indexOf(claim.source)
     val to   = sites.indexOf(claim.target)
-    val river = rivers.indexWhere(x => x._3 < 0 && ((x._1 == from && x._2 == to) || (x._2 == from && x._1 == to)))
-    if (river >= 0) {
-      copy(rivers = rivers.updated(river, (from, to, claim.punter)))
+    val river = (rMap(from) intersect rMap(to)).find(r => rivers(r)._3 < 0)
+    if (river != None) {
+      val r = rivers(river.get)
+      copy(rivers = rivers.updated(river.get, (r._1, r._2, claim.punter)))
     } else this
+  }
+}
+object GameState {
+  def fromSetup(s: Setup): GameState = {
+    val sites = s.map.sites.map(_.id)
+    val mines = s.map.mines.map(sites.indexOf(_))
+    val rivers = s.map.rivers.map(r => (sites.indexOf(r.source), sites.indexOf(r.target), -1))
+    val rMap = rivers.zipWithIndex.foldLeft(scala.collection.immutable.Map.empty[Int,Set[Int]].withDefaultValue(Set.empty[Int])){ (m, r) =>
+      m + (r._1._1 -> (m(r._1._1) + r._2)) + (r._1._2 -> (m(r._1._2) + r._2))
+    }
+
+    GameState(s.punter, s.punters, (rivers.length + s.punters - s.punter) / s.punters, sites, (0 until sites.length).map(rMap).toVector, mines, rivers)
   }
 }
 
 class Eager extends Strategy {
-  implicit val GameStateFormat = jsonFormat4(GameState.apply)
+  implicit val GameStateFormat = jsonFormat7(GameState.apply)
 
   var state: GameState = _
 
   def setup(s: Setup): Ready = {
-    val sites = s.map.sites.map(_.id)
-    val mines = s.map.mines.map(sites.indexOf(_))
-    val rivers = s.map.rivers.map(r => (sites.indexOf(r.source), sites.indexOf(r.target), -1))
-    state = GameState(s.punter, sites, mines, rivers)
+    state = GameState.fromSetup(s)
     Ready(s.punter, Some(state.toJson), None)
   }
   def play(moves: Moves, s: Option[JsValue]): Move = {
     if (s != None) state = s.get.convertTo[GameState]
     moves.moves.map(m => m.claim.foreach(c => state += c))
+    state = state.copy(remaining = state.remaining - moves.moves.length / state.punters)
+
+    // Find move with greatest guaranteed point increase
+    // Find move which reduces risk the most
+    // Find move that blocks opponents the most
     val river = state.rivers.find(_._3 < 0)
     if (river == None) 
       Move(None, Some(Pass(state.id)), s.map(_ => state.toJson))
