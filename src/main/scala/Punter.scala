@@ -34,7 +34,7 @@ object Punter {
   }
 }
 
-class Punter(strategy: Strategy, in: DataInput, out: OutputStream) {
+class Punter(strategy: Strategy, in: DataInputStream, out: OutputStream) {
   import DefaultJsonProtocol._
   import PunterJsonProtocol._
 
@@ -52,7 +52,7 @@ class Punter(strategy: Strategy, in: DataInput, out: OutputStream) {
 
   var readBuf = new Array[Byte](1024 * 1024)
   @tailrec final def recvLen(acc: Int = 0): Int = {
-    val c = in.readByte()
+    val c = in.read()
     if (c == ':') acc
     else if (c >= '0' && c <= '9') recvLen(acc * 10 + c - '0')
     else throw new IllegalArgumentException("Invalid character in message length: " + c)
