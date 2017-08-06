@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+cd $(git rev-parse --show-toplevel)
+
+if git status --porcelain | grep -qs . ; then
+  echo "Check in your work, stupid!"
+  exit 1
+fi
+
+sbt universal:package-zip-tarball
+
+mkdir -p target/submission/src/target/universal
+cp target/universal/lambda-punter-1.1-SNAPSHOT.tgz target/submission/src/target/universal
+cp scripts/{install,punter} target/submission
+cp README.md target/submission/README
+touch target/submission/PACKAGES
+git archive HEAD | tar -xf - -C target/submission/src
+
+tar -czf target/icfp-f9cd1e56-8078-4220-8073-be50df136602.tar.gz -C target/submission .
